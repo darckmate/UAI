@@ -1,0 +1,262 @@
+#Prueba 1 Fundamentos de ciencas de datos seccion 1
+#Mateo Rojas Massardo
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import statsmodels.api as sm
+
+#data.csv
+games=pd.read_csv('data.csv')
+#regions
+regions=pd.read_csv('regions.csv')
+
+#seccion A:
+    
+print(games.head())
+print(games.info())
+
+#normalizamos las variables
+games.columns=map(str.lower,games.columns)
+regions.columns = map(str.lower, regions.columns)
+
+#juntamos ambas datas
+games_regions = pd.merge(left=games, right=regions, on='noc', how="left")
+
+#revisamos los datos unicos
+print(games.nunique())
+
+#buscamos valores perdidos
+print(games.isnull().sum())
+print(round((games.isnull().sum()/(games.count()+games.isnull().sum()))*100,2))
+#analis porcentual nos entrega que hay una gran perdida de datos en altura y peso, medallas no es importante pues representa a los atletas que no recibieron medallas
+
+#heatmap en la matriz de correlacion entre variables numericas
+sns.heatmap(games[['age','height','weight']].corr())
+plt.title('Matriz correlacion variables numericas', fontsize = 20)
+plt.show()
+#plt.savefig('grafico correlacion variables numericas', dpi=800)
+
+#comparativa distribucion de edad vs peso
+games.weight.plot(kind='line',color='red', alpha=0.5,linewidth=1,label='peso',grid=True)
+games.age.plot(color='blue',alpha=0.7,linewidth=1,label='edad', grid=True)
+plt.legend(loc='upper right')
+plt.title("Comparativa entre variables edad y peso") 
+plt.show()
+
+#comparativa distribucion de edad vs altura
+games.height.plot(kind='line',color='red', alpha=0.5,linewidth=1,label='peso',grid=True)
+games.age.plot(color='blue',alpha=0.7,linewidth=1,label='edad', grid=True)
+plt.legend(loc='upper right')
+plt.title("Comparativa entre variables edad y altura") 
+plt.show()
+
+#Seccion B
+
+#edad con nombres (OJO demora en cargar)
+#plt.figure(figsize=(20, 10))
+#sns.barplot(x='name',y='age',palette='PuOr', data=games)
+#plt.show()
+#plt.savefig('grafico edad con nombres', dpi=800)
+
+#edad segun genero
+plt.figure(figsize=(20, 10))
+sns.countplot(x= 'age', hue='sex', data=games,palette="PuOr")
+plt.xticks(rotation = 90)
+plt.legend(loc=1, fontsize='x-large')
+plt.title('distribucion de edades segun genero')
+plt.show()
+
+#edad promedio por equipo
+plt.figure(figsize=(20, 10))
+avg_Age=games.groupby('team')['age'].mean().reset_index().sort_values(by='age')
+sns.barplot(avg_Age.team,avg_Age.age, palette='PuOr')
+plt.xticks([])
+plt.title('edad promedio de los deportistas por equipo')
+plt.show()
+
+#edades por noc
+plt.figure(figsize=(20, 10))
+avg_Age=games_regions.groupby('noc')['age'].mean().reset_index().sort_values(by='age')
+sns.barplot(avg_Age.noc,avg_Age.age, palette='PuOr')
+plt.xticks(rotation = 90)
+plt.title('edad promedio de los deportistas por NOC')
+plt.show()
+
+#edades por deporte
+plt.figure(figsize=(20, 10))
+avg_Age=games_regions.groupby('games')['age'].mean().reset_index().sort_values(by='age')
+sns.barplot(avg_Age.games,avg_Age.age, palette='PuOr')
+plt.xticks(rotation = 90)
+plt.title('edad promedio de los deportistas por games')
+plt.show()
+
+#por temporada
+plt.figure(figsize=(20,10))
+sns.countplot(x= 'age', hue='season', data=games_regions,palette="PuOr")
+plt.xticks(rotation = 90)
+plt.legend(loc=1, fontsize='x-large')
+plt.show()
+
+#por ciudad
+#promedio
+plt.figure(figsize=(20, 10))
+avg_Age=games_regions.groupby('city')['age'].mean().reset_index().sort_values(by='age')
+sns.barplot(avg_Age.city,avg_Age.age, palette='PuOr')
+plt.xticks(rotation = 90)
+plt.title('edad promedio de los deportistas por ciudad')
+plt.show()
+
+#por deporte
+plt.figure(figsize=(20, 10))
+avg_Age=games_regions.groupby('sport')['age'].mean().reset_index().sort_values(by='age')
+sns.barplot(avg_Age.sport,avg_Age.age, palette='PuOr')
+plt.xticks(rotation = 90)
+plt.title('edad promedio de los deportistas por sports')
+plt.show()
+
+#por evento
+plt.figure(figsize=(20, 10))
+avg_Age=games_regions.groupby('event')['age'].mean().reset_index().sort_values(by='age')
+sns.barplot(avg_Age.event,avg_Age.age, palette='PuOr')
+plt.xticks([])
+plt.title('edad promedio de los deportistas por evento')
+plt.show()
+
+#por medalla
+plt.figure(figsize=(20, 10))
+avg_Age=games_regions.groupby('medal')['age'].mean().reset_index().sort_values(by='age')
+sns.barplot(avg_Age.medal,avg_Age.age, palette='PuOr')
+plt.xticks(rotation = 90)
+plt.title('edad promedio de los deportistas por medalla')
+plt.show()
+
+#Seccion C
+
+#distribucion general de edad
+plt.figure(figsize=(20, 10))
+sns.countplot(games['age'], color='b')
+plt.xticks(rotation = 90)
+plt.title('Distribucion de atletas olimpicos segun edad', fontsize = 20)
+plt.show()
+#observamos una distribucion
+
+#evaluamos densidad
+f, ax = plt.subplots(figsize=(7, 5))
+sns.despine(f)
+sns.distplot(games['age'])
+plt.title('Distribucion de atletas olimpicos segun edad - densidad', fontsize = 20)
+plt.show()
+
+#histograma con curva de edad para atlteas
+plt.figure(figsize=(8,8))
+plt.subplot(311)
+ax=sns.distplot(games['age'].dropna(),color='blue',kde=True)
+ax.set_xlabel('Age')
+ax.set_ylabel('Density')
+ax.set_title('Distribucion de atletas olimpicos segun edad - densidad',fontsize=16,fontweight=200)
+plt.show()
+
+#distribucion de atletas segun edad y genero
+plt.figure(figsize=(20, 10))
+sns.countplot(x= 'age', hue='sex', data=games)
+plt.xticks(rotation = 90)
+plt.legend(loc=1, fontsize='x-large')
+plt.title('Distribution of olympic athletes by Age and Sex', fontsize = 20)
+plt.show()
+
+#boxplot de distribucion de edad
+sns.boxplot(y=games['age'])
+plt.title('Boxplot - rango edad', fontsize = 20)
+plt.show()
+
+#boxplot categorico
+sns.boxplot(x=games['sex'],y=games['age'])
+plt.title('Boxplot - rango edad separado por gener', fontsize = 20)
+plt.show()
+
+#dstribucion de edad por genero ademas separado por temporada
+sns.boxplot(x='season',y='age',hue='sex',data=games)
+plt.title('Boxplot - rango edad separado por genero y temporada', fontsize = 20)
+plt.show()
+
+#dstribucion de edad separado por temporada
+sns.boxplot(x='season',y='age',data=games)
+plt.title('Boxplot - rango edad separado por temporada', fontsize = 20)
+plt.show()
+
+#distribucion de las edades segun los anos
+plt.figure(figsize=(20, 10))
+sns.boxplot('year', 'age', data=games,palette="PuOr")
+plt.title('variacion de edad de los atletas a traves del tiempo')
+plt.show()
+
+#distribucion de edad para cada genero a traves de los años
+plt.figure(figsize=(12,6))
+sns.barplot(x="year", y="age", data=games,hue="sex", palette="PuOr") 
+plt.xticks(rotation = 90)
+plt.title('Distribucion de edad a lo largo del tiempo condicionada por genero') 
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+plt.show()
+
+#violin plto
+sns.violinplot(y=games['age'])
+sns.violinplot(x=games['sex'],y=games['age'])
+plt.title('violin de edades de atletas segun genero')
+plt.show()
+
+#rango de edades por anos
+plt.figure(figsize=(20,20))
+sns.violinplot(x='year',y='age',data=games,width=0.7, palette='PuOr')
+plt.title('violin de edades de atletas segun genero a traves del tiempo')
+plt.show()
+
+#distribucion de edades segun genero con altura
+sns.scatterplot(x='age',y='height', hue='sex', data=games, palette='PuOr')
+plt.title('Age')
+plt.show()
+
+#distribucion de edades segun genero con peso
+sns.scatterplot(x='age',y='weight', hue='sex', data=games, palette='PuOr')
+plt.title('Age')
+plt.show()
+
+
+#medallas por edad
+plt.figure(figsize=(20,10))
+a_medal=games.groupby('age')['medal'].count().reset_index()
+sns.barplot(x='age',y='medal',data=a_medal, palette='PuOr')
+plt.title('Medallas segun edad')
+plt.xlim(0,50)
+plt.xlabel('Age')
+plt.show()
+
+#edad promedio de los deportistas por deporte para las temporadas de verano
+plt.figure(figsize=(20, 10))
+avg_Age=games[games['season']=='Summer'].groupby('sport')['age'].mean().reset_index().sort_values(by='age')
+sns.barplot(avg_Age.sport,avg_Age.age, palette='PuOr')
+plt.xticks(rotation = 90)
+plt.title('edad promedio de los deportistas por deporte en las temporadas de verano')
+plt.show()
+
+#para invierno
+plt.figure(figsize=(20, 10))
+avg_Age=games[games['season']=='Winter'].groupby('sport')['age'].mean().reset_index().sort_values(by='age')
+sns.barplot(avg_Age.sport,avg_Age.age, palette='PuOr')
+plt.xticks(rotation = 90)
+plt.title('edad promedio de los deportistas por deporte en las temporadas de invierno')
+plt.show()
+
+#cantidad de atletas mayores a 60
+#print(games['id'][games['age']>60].count())
+
+#atleta mas viejo
+#print(games['age'].max())
+#print(games[games['age']==97].head())
+
+#qq plot
+sm.qqplot(games.age,line='s')
+plt.show()
+
+print('finished')
